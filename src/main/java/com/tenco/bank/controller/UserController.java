@@ -80,7 +80,7 @@ public class UserController {
 	/**
 	 * 로그인 요청 처리 
 	 * @param SignInFormDto 
-	 * @return 추후 account/list 페이지로 이동 예정 (todo)
+	 * @return account/list.jsp
 	 */
 	@PostMapping("/sign-in")
 	public String signInProc(SignInFormDto dto) {
@@ -96,9 +96,8 @@ public class UserController {
 		// 서비스 호출 예정 
 		User user = userService.readUser(dto);
 		httpSession.setAttribute("principal", user);
-		// 로그인 완료 --> 페이지 결정 (account/list)
-		// todo 수정 예정 (현재 접근 경로 없음) 
-		return "redirect:/user/sign-in";
+
+		return "redirect:/account/list";
 	}
 	
 	// 로그아웃 기능 만들기
