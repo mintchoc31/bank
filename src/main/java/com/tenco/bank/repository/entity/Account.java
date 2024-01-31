@@ -56,7 +56,7 @@ public class Account {
 	}
 	
 	// 포메터 기능 만들어 주세요
-	public String formatBalane() {
+	public String formatBalance() {
 		// 1000 -> 1,000
 		DecimalFormat df = new DecimalFormat("#,###");
 		String formaterNumber = df.format(balance);

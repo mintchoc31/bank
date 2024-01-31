@@ -19,7 +19,7 @@
 					<c:forEach var="account" items="${accountList}">
 						<tr>
 							<td>${account.number}</td>
-							<td>${account.balance}</td>
+							<td>${account.formatBalance()}</td>
 						</tr>
 					</c:forEach>
 
