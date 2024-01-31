@@ -15,10 +15,11 @@ public class History {
 	
 	private Integer id;
 	private Long amount; // int -> Long
-	private Long w_account_id; // integer -> Long
-	private Long d_account_id; // integer -> Long
-	private Integer w_balance; // Long -> Integer
-	private Integer d_balance; // Long -> Integer
+	private Integer wAccountId; // integer -> Long
+	private Integer dAccountId; // integer -> Long
+	private Long wBalance; // Long -> Integer
+	private Long dBalance; // Long -> Integer
 	private Timestamp createdAt;
 
+	
 }
