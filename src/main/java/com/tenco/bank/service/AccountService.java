@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tenco.bank.dto.AccountSaveFormDto;
 import com.tenco.bank.dto.DepositFormDto;
+import com.tenco.bank.dto.TransferFormDto;
 import com.tenco.bank.dto.WithdrawFormDto;
 import com.tenco.bank.handler.exception.CustomRestfulException;
 import com.tenco.bank.repository.entity.Account;
+import com.tenco.bank.repository.entity.CustomHistoryEntity;
 import com.tenco.bank.repository.entity.History;
 import com.tenco.bank.repository.interfaces.AccountRepository;
 import com.tenco.bank.repository.interfaces.HistoryRepository;
@@ -20,8 +22,7 @@ import com.tenco.bank.utils.Define;
 @Service // IoC 대상 + 싱글톤으로 관리됨
 public class AccountService {
 
-	// SOLID 원칙
-	// OCP
+	// SOLID 원칙 - OCP 
 	@Autowired
 	private AccountRepository accountRepository;
 
@@ -129,7 +130,66 @@ public class AccountService {
 		int rowResultCount = historyRepository.insert(history);
 		if (rowResultCount != 1) {
 			throw new CustomRestfulException("정상 처리 되지 않았습니다", HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-		
+		}	
 	}
+	
+	// 이체 기능 만들기
+	@Transactional
+	public void updateAccountTransfer(TransferFormDto dto, Integer principalId) {
+		Account withdrawAccountEntity = accountRepository.findByNumber(dto.getWAccountNumber());
+		Account depositAccountEntity = accountRepository.findByNumber(dto.getDAccountNumber());
+
+		if (withdrawAccountEntity == null) {
+			throw new CustomRestfulException(Define.NOT_EXIST_ACCOUNT, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		if (depositAccountEntity == null) {
+			throw new CustomRestfulException("상대방의 계좌 번호가 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		withdrawAccountEntity.checkOwner(principalId);
+
+		withdrawAccountEntity.checkPassword(dto.getWAccountPassword());
+
+		withdrawAccountEntity.checkBalance(dto.getAmount());
+
+		withdrawAccountEntity.withdraw(dto.getAmount());
+
+		depositAccountEntity.deposit(dto.getAmount());
+
+		int resultRowCountWithdraw = accountRepository.updateById(withdrawAccountEntity);
+		int resultRowCountDeposit = accountRepository.updateById(depositAccountEntity);
+		
+		if(resultRowCountWithdraw != 1 && resultRowCountDeposit != 1) {
+			throw new CustomRestfulException("정상 처리 되지 않았습니다", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		History history = History.builder().amount(dto.getAmount()) // 이체 금액
+				.wAccountId(withdrawAccountEntity.getId()) // 출금 계좌
+				.dAccountId(depositAccountEntity.getId()) // 입금 계좌
+				.wBalance(withdrawAccountEntity.getBalance()) // 출금 계좌 남은 잔액
+				.dBalance(depositAccountEntity.getBalance()) // 입금 계좌 남은 잔액
+				.build();
+		
+		int resultRowCountHistory =  historyRepository.insert(history);
+		if(resultRowCountHistory != 1) {
+			throw new CustomRestfulException("정상 처리 되지 않았습니다", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	/**
+	 * 단일 계좌 거래 내역 검색(전체, 입금, 출금) 
+	 * @param type = [all, deposit, withdraw]
+	 * @param id (account_id) 
+	 * @return 동적 쿼리 - List
+	 */
+	public List<CustomHistoryEntity> readHistoryListByAccount(String type, Integer id) {
+		return historyRepository.findByIdHistoryType(type, id);
+	}
+	
+	// 단일 계좌 조회 - AccountByID
+	public Account readByAccountId(Integer id) {
+		return accountRepository.findByAccountId(id);
+	}
+
 }
