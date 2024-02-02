@@ -46,11 +46,6 @@ public class AccountController {
 	 */
 	@GetMapping("/save")
 	public String savePage() {
-		// 인증 검사
-		User principal = (User) session.getAttribute(Define.PRINCIPAL);// 다운 캐스팅
-		if (principal == null) {
-			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED);
-		}
 		return "account/saveForm";
 	}
 
@@ -65,9 +60,7 @@ public class AccountController {
 
 		// 1. 인증검사
 		User principal = (User) session.getAttribute(Define.PRINCIPAL);
-		if (principal == null) {
-			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED);
-		}
+		
 		// 2. 유효성 검사
 		if (dto.getNumber() == null || dto.getNumber().isEmpty()) {
 			throw new CustomRestfulException("계좌 번호를 입력하세요", HttpStatus.BAD_REQUEST);
@@ -86,8 +79,8 @@ public class AccountController {
 	}
 
 	/**
-	 * 
-	 * @param model
+	 * 계좌 목록 페이지
+	 * @param model - accountList
 	 * @return
 	 */
 	// http://localhost:80/account/list or http://localhost:80/account/
@@ -111,10 +104,7 @@ public class AccountController {
 	// 출금 페이지 요청
 	@GetMapping("/withdraw")
 	public String withdrawPage() {
-		User principal = (User) session.getAttribute(Define.PRINCIPAL);
-		if (principal == null) {
-			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED);
-		}
+
 		return "account/withdraw";
 	}
 
@@ -122,7 +112,7 @@ public class AccountController {
 	@PostMapping("/withdraw")
 	public String withdrawProc(WithdrawFormDto dto) {
 		// 인증 검사
-		User principal = (User) session.getAttribute(Define.PRINCIPAL); //  다운캐스팅
+		User principal = (User) session.getAttribute(Define.PRINCIPAL); // 다운캐스팅
 		if (principal == null) {
 			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED);
 		}
@@ -150,10 +140,7 @@ public class AccountController {
 	// 입금 페이지 요청
 	@GetMapping("/deposit")
 	public String depositPage() {
-		User principal = (User) session.getAttribute(Define.PRINCIPAL);
-		if (principal == null) {
-			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED);
-		}
+
 		return "account/deposit";
 	}
 
@@ -163,7 +150,7 @@ public class AccountController {
 		// 인증 검사
 		User principal = (User) session.getAttribute(Define.PRINCIPAL);
 		if (principal == null) {
-			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED); //Define.ENTER_YOUR_LOGIN
+			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED); // Define.ENTER_YOUR_LOGIN
 		}
 		// 유효성 검사
 		if (dto.getAmount() == null) {
@@ -185,72 +172,68 @@ public class AccountController {
 		accountService.updateAccountDeposit(dto, principal.getId());
 		return "redirect:/account/list";
 	}
+
 	// 이체 페이지 요청
 	@GetMapping("/transfer")
 	public String transferPage() {
-		User principal = (User) session.getAttribute(Define.PRINCIPAL);
-		if (principal == null) {
-			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED);
-		}
-		return "account/transfer" ;
+
+		return "account/transfer";
 	}
+
 	// 이체 요청 로직 만들기
 	@PostMapping("/transfer")
 	public String transferProc(TransferFormDto dto) {
-	// 1. 인증 검사
+		// 1. 인증 검사
 		User principal = (User) session.getAttribute(Define.PRINCIPAL);
 		if (principal == null) {
 			throw new UnAuthorizedException("로그인 먼저 해주세요.", HttpStatus.UNAUTHORIZED);
 		}
 
-	// 2. 유효성 검사
-		if(dto.getAmount() == null) {
+		// 2. 유효성 검사
+		if (dto.getAmount() == null) {
 			throw new CustomRestfulException(Define.ENTER_YOUR_BALANCE, HttpStatus.BAD_REQUEST);
 		}
-		if(dto.getAmount().longValue() <= 0) {
+		if (dto.getAmount().longValue() <= 0) {
 			throw new CustomRestfulException("입금 금액이 0원 이하일 수 없습니다.", HttpStatus.BAD_REQUEST);
 		}
-		if(dto.getWAccountNumber() == null || dto.getWAccountNumber().isEmpty()) {
+		if (dto.getWAccountNumber() == null || dto.getWAccountNumber().isEmpty()) {
 			throw new CustomRestfulException("출금하실 계좌번호를 입력해주세요.", HttpStatus.BAD_REQUEST);
 		}
-		if(dto.getDAccountNumber() == null || dto.getDAccountNumber().isEmpty()) {
+		if (dto.getDAccountNumber() == null || dto.getDAccountNumber().isEmpty()) {
 			throw new CustomRestfulException("이체하실 계좌번호를 입력해주세요.", HttpStatus.BAD_REQUEST);
 		}
-		if(dto.getWAccountPassword() == null || dto.getWAccountPassword().isEmpty()) {
+		if (dto.getWAccountPassword() == null || dto.getWAccountPassword().isEmpty()) {
 			throw new CustomRestfulException(Define.ENTER_YOUR_PASSWORD, HttpStatus.BAD_REQUEST);
 		}
-		
+
 		// 서비스 호출
 		accountService.updateAccountTransfer(dto, principal.getId());
-		
+
 		return "redirect:/account/list";
 	}
-	
+
 	// 계좌 상세 보기 페이지 -- 전체(입출금), 입금, 출금
-		// http://localhost:80/account/detail/1
-		@GetMapping("/detail/{id}")
-		public String detail(@PathVariable Integer id, 
-				@RequestParam(name = "type", 
-							  defaultValue = "all", required = false) String type, 
-				Model model) {
-				
-			// 1. 인증 검사
-			User principal = (User) session.getAttribute(Define.PRINCIPAL); // 다운 캐스팅
-			if (principal == null) {
-				throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN, HttpStatus.UNAUTHORIZED);
-			}
-			
-			Account account = accountService.readByAccountId(id);
-			
-			// 서비스 호출
-			List<CustomHistoryEntity> historyList = accountService.readHistoryListByAccount(type, id);
-			System.out.println("list : " + historyList.toString());
-			
-			model.addAttribute("account", account);
-			model.addAttribute("historyList", historyList);
-			
-			return "account/detail";
+	// http://localhost:80/account/detail/1
+	@GetMapping("/detail/{id}")
+	public String detail(@PathVariable Integer id,
+			@RequestParam(name = "type", defaultValue = "all", required = false) String type, Model model) {
+
+		// 1. 인증 검사
+		User principal = (User) session.getAttribute(Define.PRINCIPAL); // 다운 캐스팅
+		if (principal == null) {
+			throw new UnAuthorizedException(Define.ENTER_YOUR_LOGIN, HttpStatus.UNAUTHORIZED);
 		}
-	
-	
+
+		Account account = accountService.readByAccountId(id);
+
+		// 서비스 호출
+		List<CustomHistoryEntity> historyList = accountService.readHistoryListByAccount(type, id);
+		System.out.println("list : " + historyList.toString());
+
+		model.addAttribute("account", account);
+		model.addAttribute("historyList", historyList);
+
+		return "account/detail";
+	}
+
 }
