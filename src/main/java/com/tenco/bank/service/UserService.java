@@ -18,13 +18,13 @@ import com.tenco.bank.repository.interfaces.UserRepository;
 public class UserService {
 
 	// 생성자 의존 주입 DI 
-	
 	// @Autowired
 	private UserRepository userRepository;	
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 	
+	// Autowired 역할
 	public UserService(UserRepository userRepository) {
 		this.userRepository = userRepository;
 	}
@@ -37,10 +37,13 @@ public class UserService {
 	@Transactional 
 	public void createUser(SignUpFormDto dto) {
 	
+		// 암호화 처리
 		User user = User.builder()
 				.username(dto.getUsername())
 				.password(passwordEncoder.encode(dto.getPassword()))
 				.fullname(dto.getFullname())
+				.originFileName(dto.getOriginFileName())
+				.uploadFileName(dto.getUploadFileName())
 				.build();
 		
 		int result = userRepository.insert(user);
@@ -68,7 +71,7 @@ public class UserService {
 		
 		// !isPwdMatched 가능. 가독성이 떨어짐
 		if(isPwdMatched == false) {
-			throw new CustomRestfulException("비밀번호가 잘못 되었습니다.", 
+			throw new CustomRestfulException("비밀번호가 잘못되었습니다.", 
 					HttpStatus.BAD_REQUEST);
 		}
 		User user = User.builder()

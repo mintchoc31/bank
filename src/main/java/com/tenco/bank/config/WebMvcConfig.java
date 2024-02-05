@@ -6,12 +6,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.tenco.bank.handler.AuthInterceptor;
 
 // @Configuration --> 스프링 부트 설정 클래스이다.
-@Configuration // IoC 대상 : 2개 이상에 IoC 처리할 때(bean)사용
+@Configuration // IoC 대상 : 2개 이상에 IoC 처리할 때(Bean)사용
 public class WebMvcConfig implements WebMvcConfigurer {
 
 	@Autowired // DI
@@ -31,5 +32,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 	@Bean // IoC 대상 - 싱글톤 처리
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+	
+	// 리소스 등록 처리
+	// 서버 컴퓨터에 위치한 리소스를 활용하는 방법(프로젝트 외부 폴더 접근)
+	@Override
+	public void addResourceHandlers(ResourceHandlerRegistry registry) {
+		// 가짜 경로 <-- 
+		registry.addResourceHandler("/images/upload/**")
+		.addResourceLocations("file:/work_spring/upload/"); // "file:///C:\\work_spring\\upload/"
 	}
 }

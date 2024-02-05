@@ -3,9 +3,13 @@ package com.tenco.bank.utils;
 public class Define {
 
 //  상수
-// 변수로 쓰려면 메모리에 있어야 함.
-// 공유 상태로 쓰려면 static - 힙이 아니라 메서드 영역으로?
+//  변수로 쓰려면 메모리에 있어야 함.
+//  공유 상태로 쓰려면 static - 힙이 아니라 메서드 영역으로?
 	public static final String PRINCIPAL = "principal";
+	
+//  이미지 관련 
+	public static final String UPLOAD_FILE_DIRECTORY = "C:\\work_spring\\upload"; // String?
+	public static final int MAX_FILE_SIZE = 1024 * 1024 * 20; // 20MB
 
 //  Account
 	public static final String EXIST_ACCOUNT = "이미 계좌가 존재합니다.";
